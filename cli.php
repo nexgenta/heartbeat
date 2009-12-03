@@ -21,6 +21,7 @@ class HeartbeatCLI extends CommandLine
 				'machine' => php_uname('m'),
 			),
 		);
+		$this->model->begin();
 		while(true)
 		{
 			$info = $hostinfo;
