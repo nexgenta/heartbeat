@@ -36,7 +36,7 @@ class HeartbeatCLI extends CommandLine
 	{
 		if(!defined('POSIX_DF_CMDLINE')) return;
 		$result = execute(POSIX_DF_CMDLINE);
-		if(!$result || empty($result['status']['pid']) || !empty($result['status']['exitcode']))
+		if(!$result || empty($result['status']['pid']) || (!empty($result['status']['exitcode']) && $result['status']['exitcode'] > 0))
 		{
 			return;
 		}
@@ -66,7 +66,7 @@ class HeartbeatCLI extends CommandLine
 	{
 		if(!defined('UPTIME_PATH')) return;
 		$result = execute(UPTIME_PATH);
-		if(!$result || empty($result['status']['pid']) || !empty($result['status']['exitcode']))
+		if(!$result || empty($result['status']['pid']) || (!empty($result['status']['exitcode']) && $result['status']['exitcode'] > 0))
 		{
 			return;
 		}
