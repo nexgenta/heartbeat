@@ -24,8 +24,8 @@ class HeartbeatModel extends Model
 		$instances = $cluster->instancesOnHost($hostName);
 		foreach($instances as $inst)
 		{
-			$cluster = $cluster->clusterNameOfInstance($inst);
-			$this->inst[$inst] = array('name' => $inst, 'cluster' => $cluster);
+			$clusterName = $cluster->clusterNameOfInstance($inst);
+			$this->inst[$inst] = array('name' => $inst, 'cluster' => $clusterName);
 		}
 		foreach($this->inst as $inst)
 		{
