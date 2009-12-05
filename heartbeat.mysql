@@ -1,11 +1,8 @@
 DROP TABLE IF EXISTS `heartbeat_pulse`;
 
 CREATE TABLE `heartbeat_pulse` (
-	`pulse_cluster` varchar(64) NOT NULL,
-	`pulse_instance` varchar(64) NOT NULL,
+	`pulse_hostname` varchar(64) NOT NULL,
 	`pulse_timestamp` datetime NOT NULL,
 	`pulse_info` text DEFAULT NULL,
-	PRIMARY KEY (`pulse_cluster`, `pulse_instance`),
-	INDEX `pulse_cluster` (`pulse_cluster`),
-	INDEX `pulse_instance` (`pulse_instance`)
+	PRIMARY KEY (`pulse_hostname`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
