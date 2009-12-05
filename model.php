@@ -2,12 +2,11 @@
 
 uses('model');
 
-require_once(APPS_ROOT . 'cluster/model.php');
-
 class HeartbeatModel extends Model
 {
-	protected $inst;
 	protected $pulses;
+	protected $beganPulsing;
+	protected $hostname;
 	
 	public static function getInstance($args = null, $className = null)
 	{
@@ -17,46 +16,63 @@ class HeartbeatModel extends Model
 		return Model::getInstance($args, $className);
 	}
 
-	public function begin()
+	public function __construct($args)
 	{
-		$cluster = ClusterModel::getInstance();
-		$hostName = $cluster->hostName;
-		$instances = $cluster->instancesOnHost($hostName);
-		foreach($instances as $inst)
+		parent::__construct($args);
+		if(defined('HOST_NAME'))
 		{
-			$clusterName = $cluster->clusterNameOfInstance($inst);
-			$this->inst[$inst] = array('name' => $inst, 'cluster' => $clusterName);
+			$this->hostname = HOST_NAME;
 		}
-		foreach($this->inst as $inst)
+		else if(defined('INSTANCE_NAME'))
 		{
-			do
+			$this->hostname = INSTANCE_NAME;
+		}
+		else
+		{
+			$n = explode('.', php_uname('n'));
+			$this->hostname = $n[0];
+		}
+	}
+
+	protected function begin()
+	{
+		$this->db->begin();
+		do
+		{
+			if($this->db->row('SELECT "pulse_timestamp" FROM {heartbeat_pulse} WHERE "pulse_hostname" = ?', $this->hostname))
 			{
-				$this->db->begin();
-				if($this->db->row('SELECT "pulse_timestamp" FROM {heartbeat_pulse} WHERE "pulse_cluster" = ? AND "pulse_instance" = ?', $inst['cluster'], $inst['name']))
-				{
-					$this->db->rollback();
-					break;
-				}
-				$this->db->insert('heartbeat_pulse', array(
-					'pulse_cluster' => $inst['cluster'],
-					'pulse_instance' => $inst['name'],
-					'@pulse_timestamp' => $this->db->now(),
-					'pulse_info' => null,
-				));
+				$this->db->rollback();
+				break;
 			}
-			while(!$this->db->commit());
-		}		
+			$this->db->insert('heartbeat_pulse', array(
+				'pulse_hostname' => $this->hostname,
+				'@pulse_timestamp' => $this->db->now(),
+				'pulse_info' => null,
+			));
+		}
+		while(!$this->db->commit());
+		$this->beganPulsing = true;
+	}
+
+	public function resetPulse()
+	{
+		$this->beganPulsing = false;
 	}
 
 	public function pulse($data)
 	{
+		if(!$this->beganPulsing)
+		{
+			$this->begin();
+			$this->beganPulsing = false;
+		}
 		if(is_object($data) || is_array($data))
 		{
 			$data = json_encode($data);
 		}
 		foreach($this->inst as $inst)
 		{
-			$this->db->exec('UPDATE {heartbeat_pulse} SET "pulse_timestamp" = ' . $this->db->now() . ', "pulse_info" = ? WHERE "pulse_cluster" = ? AND "pulse_instance" = ?', $data, $inst['cluster'], $inst['name']);
+			$this->db->exec('UPDATE {heartbeat_pulse} SET "pulse_timestamp" = ' . $this->db->now() . ', "pulse_info" = ? WHERE "pulse_hostname" = ?', $data, $this->hostname);
 		}
 	}
 	
@@ -66,10 +82,6 @@ class HeartbeatModel extends Model
 		$rows = $this->db->rows('SELECT * FROM {heartbeat_pulse}');
 		foreach($rows as $row)
 		{
-			if(!isset($this->pulses[$row['pulse_cluster']]))
-			{
-				$this->pulses[$row['pulse_cluster']] = array();
-			}
 			$row['unixtime'] = strtotime($row['pulse_timestamp']);
 			if(strlen($row['pulse_info']))
 			{
@@ -79,19 +91,23 @@ class HeartbeatModel extends Model
 			{
 				$row['info'] = null;
 			}
-			$this->pulses[$row['pulse_cluster']][$row['pulse_instance']] = $row;
+			$this->pulses[$row['pulse_hostname']] = $row;
 		}
 	}
 	
-	public function lastPulse($cluster, $instance)
+	public function lastPulse($host = null)
 	{
+		if(!$host)
+		{
+			$host = $this->hostname;
+		}
 		if(!$this->pulses)
 		{
 			$this->refresh();
 		}
-		if(isset($this->pulses[$cluster][$instance]))
+		if(isset($this->pulses[$host]))
 		{
-			return $this->pulses[$cluster][$instance];
+			return $this->pulses[$host];
 		}
 		return null;
 	}
