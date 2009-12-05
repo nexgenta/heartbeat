@@ -21,14 +21,23 @@ class HeartbeatCLI extends CommandLine
 				'machine' => php_uname('m'),
 			),
 		);
-		$this->model->begin();
 		while(true)
 		{
-			$info = $hostinfo;
-			$this->getDiskUsage($info);
-			$this->getUptime($info);
-			$this->model->pulse($info);
-			sleep(HEARTBEAT_PULSE_INTERVAL);
+			try
+			{
+				$info = $hostinfo;
+				$this->getDiskUsage($info);
+				$this->getUptime($info);
+				$this->model->pulse($info);
+				sleep(HEARTBEAT_PULSE_INTERVAL);
+			}
+			catch(DBSystemException $e)
+			{
+				echo "Database system exception occurred: " . $e->getMessage() . "\n";
+				echo "Retrying in 20 seconds...\n";
+				$this->model->resetPulse();
+				sleep(20);
+			}
 		}
 	}
 	
