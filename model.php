@@ -70,10 +70,7 @@ class HeartbeatModel extends Model
 		{
 			$data = json_encode($data);
 		}
-		foreach($this->inst as $inst)
-		{
-			$this->db->exec('UPDATE {heartbeat_pulse} SET "pulse_timestamp" = ' . $this->db->now() . ', "pulse_info" = ? WHERE "pulse_hostname" = ?', $data, $this->hostname);
-		}
+		$this->db->exec('UPDATE {heartbeat_pulse} SET "pulse_timestamp" = ' . $this->db->now() . ', "pulse_info" = ? WHERE "pulse_hostname" = ?', $data, $this->hostname);
 	}
 	
 	public function refresh()
