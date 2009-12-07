@@ -10,7 +10,7 @@ class HeartbeatCLI extends CommandLine
 {
 	protected $modelClass = 'HeartbeatModel';
 	
-	protected function perform___CLI__()
+	public function main($args)
 	{
 		$hostinfo = array(
 			'uname' => array(
