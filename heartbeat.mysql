@@ -1,8 +1,0 @@
-DROP TABLE IF EXISTS `heartbeat_pulse`;
-
-CREATE TABLE `heartbeat_pulse` (
-	`pulse_hostname` varchar(64) NOT NULL,
-	`pulse_timestamp` datetime NOT NULL,
-	`pulse_info` text DEFAULT NULL,
-	PRIMARY KEY (`pulse_hostname`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
