@@ -45,9 +45,9 @@ class HeartbeatModule extends Module
 		if($targetVersion == 1)
 		{
 			$t = $this->db->schema->tableWithOptions('heartbeat_pulse', DBTable::CREATE_ALWAYS);
-			$t->columnWithSpec('pulse_hostname', DBTable::VARCHAR, 64, DBTable::NOT_NULL, null, 'Source of this heartbeat');
-			$t->columnWithSpec('pulse_timestamp', DBTable::DATETIME, null, DBTable::NOT_NULL, null, 'Timestamp of the heartbeat');
-			$t->columnWithSpec('pulse_info', DBTable::TEXT, null, DBTable::NULLS, null, 'JSON-encoded heartbeat data');
+			$t->columnWithSpec('pulse_hostname', DBType::VARCHAR, 64, DBCol::NOT_NULL, null, 'Source of this heartbeat');
+			$t->columnWithSpec('pulse_timestamp', DBType::DATETIME, null, DBCol::NOT_NULL, null, 'Timestamp of the heartbeat');
+			$t->columnWithSpec('pulse_info', DBType::TEXT, null, DBCol::NULLS|DBCol::BIG, null, 'JSON-encoded heartbeat data');
 			$t->indexWithSpec(null, DBIndex::PRIMARY, 'pulse_hostname');
 			return $t->apply();
 		}
